@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system;
+  
+  --background: 220 33% 98%;
+  --foreground: 220 10% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 220 10% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 10% 15%;
+  
+  --primary: 235 85% 65%;
+  --primary-foreground: 210 20% 98%;
+  
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 10% 15%;
+  
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 8% 50%;
+  
+  --accent: 220 14% 96%;
+  --accent-foreground: 220 10% 15%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 20% 98%;
+  
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 235 85% 65%;
+  
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 220 25% 9%;
+  --foreground: 220 10% 98%;
+  
+  --card: 220 25% 12%;
+  --card-foreground: 220 10% 98%;
+  
+  --popover: 220 25% 12%;
+  --popover-foreground: 220 10% 98%;
+  
+  --primary: 235 85% 65%;
+  --primary-foreground: 210 20% 98%;
+  
+  --secondary: 220 25% 15%;
+  --secondary-foreground: 220 10% 98%;
+  
+  --muted: 220 25% 15%;
+  --muted-foreground: 220 10% 60%;
+  
+  --accent: 220 25% 15%;
+  --accent-foreground: 220 10% 98%;
+  
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 20% 98%;
+  
+  --border: 220 25% 18%;
+  --input: 220 25% 18%;
+  --ring: 235 85% 65%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
