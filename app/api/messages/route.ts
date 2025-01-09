@@ -1,33 +1,17 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { supabaseServer } from '@/lib/supabase/server';
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
-    const { channelId, content } = await request.json();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from('messages')
-      .insert([
-        { channel_id: channelId, sender_id: user.id, content }
-      ])
-      .select()
-      .single();
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    return NextResponse.json({ message: data });
+    return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Error sending message' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Error fetching messages' }, { status: 500 });
   }
 }
