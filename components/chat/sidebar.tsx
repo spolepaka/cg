@@ -13,16 +13,10 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ChannelContext } from '@/app/context/channel-context';
 import { ThemeToggle } from '@/components/theme-toggle';
-
-interface Channel {
-  id: string;
-  name: string;
-  created_at: string;
-  created_by: string;
-}
+import type { Channel } from '@/app/(chat)/types/chat';
 
 export function Sidebar() {
   const router = useRouter();
@@ -31,6 +25,7 @@ export function Sidebar() {
   const [newChannel, setNewChannel] = useState('');
   const [editingChannel, setEditingChannel] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -43,9 +38,13 @@ export function Sidebar() {
         .order('created_at', { ascending: true });
       
       if (data) {
-        setChannels(data);
-        if (!selectedChannel && data.length > 0) {
-          setSelectedChannel(data[0].id);
+        setChannels(data as Channel[]);
+        const currentChannelId = pathname.split('/').pop();
+        if (!currentChannelId || currentChannelId === 'chat') {
+          if (data.length > 0) {
+            setSelectedChannel(data[0].id);
+            router.push(`/chat/${data[0].id}`);
+          }
         }
       }
     };
@@ -66,7 +65,7 @@ export function Sidebar() {
     return () => {
       channelsSubscription.unsubscribe();
     };
-  }, [selectedChannel, setSelectedChannel]);
+  }, [pathname, router, setSelectedChannel]);
 
   const handleCreateChannel = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,6 +145,11 @@ export function Sidebar() {
     router.push('/login');
   };
 
+  const handleChannelSelect = (channelId: string) => {
+    setSelectedChannel(channelId);
+    router.push(`/chat/${channelId}`);
+  };
+
   return (
     <div className="w-64 bg-card border-r flex flex-col h-full">
       <div className="p-3 border-b flex items-center justify-between">
@@ -214,10 +218,10 @@ export function Sidebar() {
                     variant="ghost"
                     className={`w-full justify-start h-8 px-2 ${
                       selectedChannel === channel.id 
-                        ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+                        ? 'bg-primary/20 text-primary hover:bg-primary/25 border-l-2 border-primary' 
                         : 'text-muted-foreground hover:text-card-foreground'
                     } group-hover:w-[calc(100%-32px)]`}
-                    onClick={() => setSelectedChannel(channel.id)}
+                    onClick={() => handleChannelSelect(channel.id)}
                   >
                     <Hash className="h-4 w-4 mr-2 shrink-0" />
                     <span className="truncate">{channel.name}</span>

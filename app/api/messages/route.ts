@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import type { Database } from '@/lib/supabase/database.types';
 
 export async function GET(request: Request) {
   try {
-    const { data, error } = await supabaseServer
+    const supabase = createServerSupabaseClient();
+    const { data, error } = await supabase
       .from('messages')
-      .select('*')
+      .select(`
+        *,
+        sender:profiles(*)
+      `)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

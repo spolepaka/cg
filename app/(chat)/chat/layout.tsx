@@ -1,8 +1,9 @@
 'use client';
 
 import { Sidebar } from '@/components/chat/sidebar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChannelContext } from '@/app/context/channel-context';
+import { usePathname } from 'next/navigation';
 
 export default function ChatLayout({
   children,
@@ -10,6 +11,15 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const pathname = usePathname();
+
+  // Set initial channel from URL
+  useEffect(() => {
+    const channelId = pathname.split('/').pop();
+    if (channelId && channelId !== 'chat') {
+      setSelectedChannel(channelId);
+    }
+  }, [pathname]);
 
   return (
     <ChannelContext.Provider value={{ selectedChannel, setSelectedChannel }}>

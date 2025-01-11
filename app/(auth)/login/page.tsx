@@ -10,6 +10,7 @@ import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import type { Database } from '@/lib/supabase/database.types';
 
 const AI_AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
@@ -18,81 +19,99 @@ const AI_AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
-];
+] as const;
+
+interface AuthFormData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+}
 
 export default function AuthPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState(AI_AVATARS[0]);
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<AuthFormData>({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    avatar: AI_AVATARS[0],
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
+    if (!formData.email) {
       setError('Email is required');
       return;
     }
-    setLoading(true);
+    setIsLoading(true);
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
 
       if (error) throw error;
+      
+      // Wait for session to be set
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      
+      router.refresh();
       router.push('/chat');
     } catch (error: any) {
       setError(error.message === 'Invalid login credentials'
         ? 'Invalid email or password'
         : 'An error occurred during login');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName) {
+    if (!formData.firstName || !formData.lastName) {
       setError('First name and last name are required');
       return;
     }
-    setLoading(true);
+    setIsLoading(true);
     setError('');
 
     try {
-      // First sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error('No user data returned');
 
-      // Then create their profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([{
+        .insert({
           id: authData.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          full_name: `${firstName} ${lastName}`,
-          avatar_url: selectedAvatar,
-        }]);
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          full_name: `${formData.firstName} ${formData.lastName}`,
+          avatar_url: formData.avatar,
+          status: 'active',
+          last_seen: new Date().toISOString(),
+        } satisfies Database['public']['Tables']['profiles']['Insert'])
+        .single();
 
       if (profileError) throw profileError;
 
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      router.refresh();
       router.push('/chat');
     } catch (error: any) {
       setError(error.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -126,21 +145,21 @@ export default function AuthPage() {
                   <Input
                     type="email"
                     placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                   />
                   <Input
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                   />
                 </div>
                 {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Logging in...' : 'Login'}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </Button>
               </form>
             </TabsContent>
@@ -152,30 +171,30 @@ export default function AuthPage() {
                     <Input
                       type="text"
                       placeholder="First Name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       required
                     />
                     <Input
                       type="text"
                       placeholder="Last Name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       required
                     />
                   </div>
                   <Input
                     type="email"
                     placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                   />
                   <Input
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                   />
                   <div className="space-y-2">
@@ -185,9 +204,9 @@ export default function AuthPage() {
                         <button
                           key={avatar}
                           type="button"
-                          onClick={() => setSelectedAvatar(avatar)}
+                          onClick={() => setFormData({ ...formData, avatar })}
                           className={`p-1 rounded-lg transition-all ${
-                            selectedAvatar === avatar ? 'ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
+                            formData.avatar === avatar ? 'ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
                           }`}
                         >
                           <Avatar className="w-12 h-12">
@@ -199,8 +218,8 @@ export default function AuthPage() {
                   </div>
                 </div>
                 {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Creating account...' : 'Sign Up'}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Creating account...' : 'Sign Up'}
                 </Button>
               </form>
             </TabsContent>

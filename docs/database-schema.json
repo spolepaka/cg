@@ -1,0 +1,84 @@
+{
+  "// Schema documentation for ChatGenius": "",
+  "tables": {
+    "// Core tables with their relationships": "",
+    "workspaces": {
+      "// Manages organizational structure": "",
+      "fields": {
+        "id": "UUID PRIMARY KEY",
+        "name": "TEXT NOT NULL",
+        "owner_id": "UUID REFERENCES auth.users",
+        "created_at": "TIMESTAMPTZ"
+      }
+    },
+    "channels": {
+      "// Handles both regular channels and DMs": "",
+      "fields": {
+        "id": "UUID PRIMARY KEY", 
+        "name": "TEXT NOT NULL",
+        "created_by": "UUID REFERENCES profiles",
+        "created_at": "TIMESTAMPTZ"
+      }
+    },
+    "channel_members": {
+      "// Junction table for channel membership": "",
+      "// For DMs, limited to exactly two members": "",
+      "fields": {
+        "channel_id": "UUID REFERENCES channels",
+        "user_id": "UUID",
+        "joined_at": "TIMESTAMPTZ"
+      },
+      "constraints": {
+        "primary_key": ["channel_id", "user_id"]
+      }
+    },
+    "profiles": {
+      "// Extended user profile information": "",
+      "// Auto-created via trigger when user signs up": "",
+      "fields": {
+        "id": "UUID PRIMARY KEY REFERENCES auth.users",
+        "first_name": "TEXT NOT NULL",
+        "last_name": "TEXT NOT NULL", 
+        "full_name": "TEXT NOT NULL",
+        "avatar_url": "TEXT",
+        "created_at": "TIMESTAMPTZ",
+        "last_seen": "TIMESTAMPTZ",
+        "status": "TEXT"
+      }
+    },
+    "messages": {
+      "// Stores chat messages with relationships": "",
+      "fields": {
+        "id": "UUID PRIMARY KEY",
+        "content": "TEXT NOT NULL",
+        "channel_id": "UUID REFERENCES channels",
+        "sender_id": "UUID REFERENCES profiles",
+        "created_at": "TIMESTAMPTZ"
+      }
+    }
+  },
+  "types": {
+    "// TypeScript type definitions": "",
+    "Profile": "Database['public']['Tables']['profiles']['Row']",
+    "Message": "Database['public']['Tables']['messages']['Row'] & { sender: Profile }",
+    "Channel": "Database['public']['Tables']['channels']['Row']",
+    "ChannelMember": "Database['public']['Tables']['channel_members']['Row']"
+  },
+  "features": {
+    "// Key implementation details": "",
+    "realtime": {
+      "enabled": true,
+      "description": "WebSocket connections handled by Supabase"
+    },
+    "security": {
+      "rls_enabled": false,
+      "description": "RLS disabled for MVP but policies defined"
+    },
+    "data_integrity": {
+      "cascading_deletes": true,
+      "foreign_keys": true,
+      "auto_timestamps": true,
+      "uuid_primary_keys": true
+    }
+  }
+} 
